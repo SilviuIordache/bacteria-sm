@@ -1,0 +1,13 @@
+[gd_scene load_steps=3 format=3 uid="uid://cyl3gk7usis5k"]
+
+[ext_resource type="Script" uid="uid://dig76o1pq8klb" path="res://game_of_life.gd" id="1_ig7tw"]
+[ext_resource type="Script" uid="uid://dbnbilncxjsjc" path="res://bacteria.gd" id="2_0xm2m"]
+
+[node name="Main" type="Node2D"]
+
+[node name="GameOfLife" type="Node2D" parent="."]
+visible = false
+script = ExtResource("1_ig7tw")
+
+[node name="Bacteria" type="Node2D" parent="."]
+script = ExtResource("2_0xm2m")

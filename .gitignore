@@ -1,0 +1,13 @@
+# Godot 4+ specific ignores
+.godot/
+/android/
+.import/
+.export/
+*.import
+*.godot-export
+
+# macOS + editor junk
+.DS_Store
+*.log
+*.tmp
+.vscode/

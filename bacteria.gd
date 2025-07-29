@@ -3,10 +3,12 @@ extends Node2D
 const GRID_WIDTH = 140
 const GRID_HEIGHT =70
 const CELL_SIZE = 12
-const GAME_TICK_SPEED = 0.1
-const BACTERIA_CELL_DEATH_CHANCE = 0.9
+const GAME_TICK_SPEED = 0.4
+const BACTERIA_CELL_DEATH_CHANCE = 0.2
 
 var is_drawing_block := false  # Tracks whether mouse is held down
+var last_drawn_cell: Vector2i = Vector2i(-1, -1)  # sentinel value meaning "none"
+
 
 
 enum CellType {
@@ -29,11 +31,48 @@ func _handle_user_draw():
 	var mouse_pos = get_viewport().get_mouse_position()
 	var cell_x = int(mouse_pos.x / CELL_SIZE)
 	var cell_y = int(mouse_pos.y / CELL_SIZE)
+	var current_cell = Vector2i(cell_x, cell_y)
 
 	if cell_x >= 0 and cell_x < GRID_WIDTH and cell_y >= 0 and cell_y < GRID_HEIGHT:
-		if grid[cell_y][cell_x] != CellType.BLOCK:
-			grid[cell_y][cell_x] = CellType.BLOCK
-			queue_redraw()
+		if last_drawn_cell == Vector2i(-1, -1) or last_drawn_cell == current_cell:
+			_draw_cell(current_cell)
+		else:
+			# Bresenham's line algorithm for smoother drawing
+			var points = _get_line_cells(last_drawn_cell, current_cell) if last_drawn_cell.distance_to(current_cell) > 1 else [current_cell]
+
+			for p in points:
+				_draw_cell(p)
+
+		last_drawn_cell = current_cell
+
+func _draw_cell(cell: Vector2i):
+	if grid[cell.y][cell.x] != CellType.BLOCK:
+		grid[cell.y][cell.x] = CellType.BLOCK
+		queue_redraw()
+
+func _get_line_cells(start: Vector2i, end: Vector2i) -> Array:
+	var points = []
+	var dx = abs(end.x - start.x)
+	var dy = -abs(end.y - start.y)
+	var sx = 1 if start.x < end.x else -1
+	var sy = 1 if start.y < end.y else -1
+	var err = dx + dy
+	var x = start.x
+	var y = start.y
+
+	while true:
+		points.append(Vector2i(x, y))
+		if x == end.x and y == end.y:
+			break
+		var e2 = 2 * err
+		if e2 >= dy:
+			err += dy
+			x += sx
+		if e2 <= dx:
+			err += dx
+			y += sy
+
+	return points
 
 func get_random_coord() -> Vector2i:
 	return Vector2i(
@@ -92,17 +131,10 @@ func _draw():
 	_draw_grid_lines();
 		
 func _input(event):
-	
 	if event is InputEventMouseButton:
 		is_drawing_block = event.button_index == MOUSE_BUTTON_LEFT and event.pressed
-		
-	#if event is InputEventMouseButton and event.pressed:
-		#var cell_x = int(event.position.x / CELL_SIZE)
-		#var cell_y = int(event.position.y / CELL_SIZE)
-#
-		#if cell_x >= 0 and cell_x < GRID_WIDTH and cell_y >= 0 and cell_y < GRID_HEIGHT:
-			#grid[cell_y][cell_x] = CellType.BLOCK
-			#queue_redraw()
+		if not is_drawing_block:
+			last_drawn_cell = Vector2i(-1, -1)
 				
 func _spread_bacteria():
 	
@@ -116,7 +148,7 @@ func _spread_bacteria():
 		for x in range(GRID_WIDTH):
 			var current = snapshot[y][x]
 			if current in [CellType.BACTERIA_RED, CellType.BACTERIA_GREEN]:
-				if randf() < 0.3:
+				if randf() < BACTERIA_CELL_DEATH_CHANCE:
 					grid[y][x] = CellType.EMPTY
 					continue
 

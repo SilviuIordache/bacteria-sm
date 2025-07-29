@@ -4,7 +4,7 @@ const GRID_WIDTH = 140
 const GRID_HEIGHT =70
 const CELL_SIZE = 12
 const GAME_TICK_SPEED = 0.1
-const BACTERIA_CELL_DEATH_CHANCE = 0.2
+const BACTERIA_CELL_DEATH_CHANCE = 0.9
 
 var is_drawing_block := false  # Tracks whether mouse is held down
 
@@ -121,23 +121,20 @@ func _spread_bacteria():
 					continue
 
 				var candidates = []
+				var directions = [Vector2i(0, -1), Vector2i(1, 0), Vector2i(0, 1), Vector2i(-1, 0)]  # Only cardinal directions
 
-				for dy in range(-1, 2):
-					for dx in range(-1, 2):
-						if dx == 0 and dy == 0:
-							continue
 
-						var nx = x + dx
-						var ny = y + dy
-
+				for dir in directions:
+					var nx = x + dir.x
+					var ny = y + dir.y
 						
-						if nx >= 0 and nx < GRID_WIDTH and ny >= 0 and ny < GRID_HEIGHT:
-							var target = snapshot[ny][nx] 
+					if nx >= 0 and nx < GRID_WIDTH and ny >= 0 and ny < GRID_HEIGHT:
+						var target = snapshot[ny][nx] 
 
-							if current == CellType.BACTERIA_RED and target in [CellType.EMPTY, CellType.BACTERIA_GREEN]:
-								candidates.append(Vector2i(nx, ny))
-							elif current == CellType.BACTERIA_GREEN and target in [CellType.EMPTY, CellType.BACTERIA_RED]:
-								candidates.append(Vector2i(nx, ny))
+						if current == CellType.BACTERIA_RED and target in [CellType.EMPTY, CellType.BACTERIA_GREEN]:
+							candidates.append(Vector2i(nx, ny))
+						elif current == CellType.BACTERIA_GREEN and target in [CellType.EMPTY, CellType.BACTERIA_RED]:
+							candidates.append(Vector2i(nx, ny))
 
 				if candidates.size() > 0:
 					var chosen = candidates[randi() % candidates.size()]

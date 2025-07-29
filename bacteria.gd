@@ -14,12 +14,6 @@ func get_random_coord() -> Vector2i:
 		randi() % GRID_HEIGHT
 	)
 
-func _ready():
-	_init_grid()
-	queue_redraw()
-	await get_tree().create_timer(0.2).timeout
-	_start_spread_loop()
-
 func _init_grid():
 	grid.clear()
 	for y in range(GRID_HEIGHT):
@@ -30,17 +24,18 @@ func _init_grid():
 		grid.append(row)
 		
 	
-	var red_pos = get_random_coord()
-	var green_pos = get_random_coord()
+	var red_pos_1 = get_random_coord()
+	var red_pos_2 = get_random_coord()
+	var green_pos_1 = get_random_coord()
+	var green_pos_2 = get_random_coord()
 	
 	
-	grid[red_pos.y][red_pos.x] = 2
-	grid[green_pos.y][green_pos.x] = 3
-	
-	#grid[20][20] = 2  # red bacteria
-	#grid[40][30] = 3  # green bacteria
-		
-func _draw():
+	grid[red_pos_1.y][red_pos_1.x] = 2
+	grid[red_pos_2.y][red_pos_2.x] = 2
+	grid[green_pos_1.y][green_pos_1.x] = 3
+	grid[green_pos_2.y][green_pos_2.x] = 3
+
+func _draw_cells():
 	# Draw live cells
 	for y in range(GRID_HEIGHT):
 		for x in range(GRID_WIDTH):
@@ -51,7 +46,8 @@ func _draw():
 				draw_rect(Rect2(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE), Color.RED)
 			elif value == 3:
 				draw_rect(Rect2(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE), Color.GREEN)
-
+				
+func _draw_grid_lines():
 	# Draw vertical lines
 	for x in range(GRID_WIDTH + 1):
 		draw_line(
@@ -70,6 +66,10 @@ func _draw():
 			1
 		)
 		
+func _draw():
+	_draw_cells();
+	_draw_grid_lines();
+		
 func _input(event):
 	if event is InputEventMouseButton and event.pressed:
 		var cell_x = int(event.position.x / CELL_SIZE)
@@ -79,7 +79,7 @@ func _input(event):
 			grid[cell_y][cell_x] = 2  # Mark as red "bacteria" cell
 			queue_redraw()
 				
-func spread_bacteria():
+func _spread_bacteria():
 	var to_infect = []
 
 	for y in range(GRID_HEIGHT):
@@ -119,7 +119,15 @@ func spread_bacteria():
 
 	queue_redraw()
 
+
+func _ready():
+	_init_grid()
+	queue_redraw()
+	await get_tree().create_timer(0.2).timeout
+	_start_spread_loop()
+
+
 func _start_spread_loop() -> void:
 	while true:
 		await get_tree().create_timer(GAME_TICK_SPEED).timeout
-		spread_bacteria()
+		_spread_bacteria()
